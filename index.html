@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="./lib/cube.js"></script>
+    <script type="text/javascript" src="./lib/solve.js"></script>
+    <script type="text/javascript" src="./lib/async.js"></script>
+  </head>
+  <body>
+    <div id="main">Initialising generator...</div>
+    <button disabled id="gen">Generate</button>
+    <div>--</div>
+    <div>Corner cycles: <button id="plus">+</button></div>
+    <div id="cycles"></div>
+    <div id="template" style="display:none">
+      <div>
+        <input disabled type="text"/> x
+        <input disabled type="text"/>
+        <button disabled>-</button>
+      </div>
+    </div>
+    <br><br>
+    <div><em>Built with <a target="_blank" href="https://github.com/ldez/cubejs">https://github.com/ldez/cubejs</a></em></div>
+    <script type="text/javascript" src="./main.js"></script>
+  </body>
+</html>
