@@ -37,8 +37,8 @@ const groups = [
 ];
 
 function gen(cycles) {
-  const cube = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'.split('');
 
+  // build the memo sequence
   const chosen = [];
   while (cycles.length > 0) {
     const cycle = cycles[Math.floor(Math.random() * cycles.length)];
@@ -48,10 +48,17 @@ function gen(cycles) {
                     reduce((a, n) => a.concat(n), []);
 
     cycles = cycles.filter(_ => !dupes.includes(_[0]) && !dupes.includes(_[1]));
+  }
 
+  console.log(chosen)
+
+  const cube = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'.split('');
+
+  // execute the swaps in reverse
+  for (const choice of chosen) {
     const buf = cubies['C'];
-    const a = cubies[cycle[0]];
-    const b = cubies[cycle[1]];
+    const a = cubies[choice[1]]; // backwards
+    const b = cubies[choice[0]];
 
     const tmp = [cube[buf[0]], cube[buf[1]], cube[buf[2]]];
     cube[buf[0]] = cube[a[0]];
@@ -65,7 +72,6 @@ function gen(cycles) {
     cube[b[2]] = tmp[2];
   }
 
-  console.log(chosen)
   return cube.reduce((a, n) => a + n, '');
 }
 
@@ -86,7 +92,9 @@ function sq(xs) {
 }
 
 function scramble(cycles) {
-  return Cube.fromString(gen(cycles.reduce((a, n) => a.concat(n), []))).solve();
+  const solve = Cube.fromString(gen(cycles.reduce((a, n) => a.concat(n), []))).solve();
+  const scramble = Cube.inverse(solve);
+  return scramble;
 }
 
 const div = document.getElementById('main');
