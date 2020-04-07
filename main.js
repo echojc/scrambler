@@ -55,21 +55,21 @@ function gen(cycles) {
   const cube = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'.split('');
 
   // execute the swaps in reverse
-  for (const choice of chosen) {
+  for (let i = chosen.length - 1; i >= 0; i--) {
     const buf = cubies['C'];
-    const a = cubies[choice[1]]; // backwards
-    const b = cubies[choice[0]];
+    const a = cubies[chosen[i][1]]; // reverse
+    const b = cubies[chosen[i][0]];
 
     const tmp = [cube[buf[0]], cube[buf[1]], cube[buf[2]]];
-    cube[buf[0]] = cube[a[0]];
-    cube[buf[1]] = cube[a[1]];
-    cube[buf[2]] = cube[a[2]];
-    cube[a[0]] = cube[b[0]];
-    cube[a[1]] = cube[b[1]];
-    cube[a[2]] = cube[b[2]];
-    cube[b[0]] = tmp[0];
-    cube[b[1]] = tmp[1];
-    cube[b[2]] = tmp[2];
+    cube[buf[0]] = cube[b[0]];
+    cube[buf[1]] = cube[b[1]];
+    cube[buf[2]] = cube[b[2]];
+    cube[b[0]] = cube[a[0]];
+    cube[b[1]] = cube[a[1]];
+    cube[b[2]] = cube[a[2]];
+    cube[a[0]] = tmp[0];
+    cube[a[1]] = tmp[1];
+    cube[a[2]] = tmp[2];
   }
 
   return cube.reduce((a, n) => a + n, '');
@@ -91,11 +91,11 @@ function sq(xs) {
   return xp(xs, xs);
 }
 
-function scramble(cycles) {
-  const solve = Cube.fromString(gen(cycles.reduce((a, n) => a.concat(n), []))).solve();
-  const scramble = Cube.inverse(solve);
-  return scramble;
-}
+//function scramble(cycles) {
+//  const solve = Cube.fromString(gen(cycles.reduce((a, n) => a.concat(n), []))).solve();
+//  const scramble = Cube.inverse(solve);
+//  return scramble;
+//}
 
 const div = document.getElementById('main');
 const cycles = document.getElementById('cycles');
@@ -119,7 +119,7 @@ Cube.asyncInit('./lib/worker.js', function() {
     });
     const c = Cube.fromString(gen(Object.keys(cs)));
     Cube._asyncSolve(c, function(alg) {
-      div.innerText = alg;
+      div.innerText = Cube.inverse(alg);
     });
   };
 
