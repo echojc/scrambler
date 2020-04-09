@@ -1,78 +1,104 @@
-const cubies = {
-  'A': [0,47,36],
-  'B': [2,11,45],
-  'C': [8,20,9],
-  'D': [6,38,18],
-  'E': [36,0,47],
-  'F': [38,18,6],
-  'G': [44,27,24],
-  'H': [42,53,33],
-  'I': [18,6,38],
-  'J': [20,9,8],
-  'K': [26,29,15],
-  'L': [24,44,27],
-  'M': [9,8,20],
-  'N': [11,45,2],
-  'O': [17,35,51],
-  'P': [15,26,29],
-  'Q': [45,2,11],
-  'R': [47,36,0],
-  'S': [53,33,42],
-  'T': [51,17,35],
-  'U': [27,24,44],
-  'V': [29,15,26],
-  'W': [35,51,17],
-  'X': [33,42,53],
-};
+// cycles a into b
+function swapCorners(cube, a, b, buffer) {
+  if (buffer == null) buffer = 'C';
 
-const groups = [
-  ['G','L','U'],
-  ['H','S','X'],
-  ['T','O','W'],
-  ['K','P','V'],
-  ['D','F','I'],
-  ['B','N','Q'],
-  ['A','R','E'],
-  ['C','M','J'],
-];
+  const indexes = {
+    'A': [ 0,47,36], 'B': [ 2,11,45], 'C': [ 8,20, 9], 'D': [ 6,38,18],
+    'E': [36, 0,47], 'F': [38,18, 6], 'G': [44,27,24], 'H': [42,53,33],
+    'I': [18, 6,38], 'J': [20, 9, 8], 'K': [26,29,15], 'L': [24,44,27],
+    'M': [ 9, 8,20], 'N': [11,45, 2], 'O': [17,35,51], 'P': [15,26,29],
+    'Q': [45, 2,11], 'R': [47,36, 0], 'S': [53,33,42], 'T': [51,17,35],
+    'U': [27,24,44], 'V': [29,15,26], 'W': [35,51,17], 'X': [33,42,53],
+  };
 
-function gen(cycles) {
+  for (let i = 0; i < 3; i++) {
+    const tmp = cube[indexes[buffer][i]];
+    cube[indexes[buffer][i]] = cube[indexes[b][i]];
+    cube[indexes[b][i]] = cube[indexes[a][i]];
+    cube[indexes[a][i]] = tmp;
+  }
+  return cube;
+}
 
+function chooseRandom(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function otherFacesOnCubie(faces) {
+  const groups = {
+    'G': ['G','L','U'], 'L': ['G','L','U'], 'U': ['G','L','U'],
+    'H': ['H','S','X'], 'S': ['H','S','X'], 'X': ['H','S','X'],
+    'T': ['T','O','W'], 'O': ['T','O','W'], 'W': ['T','O','W'],
+    'K': ['K','P','V'], 'P': ['K','P','V'], 'V': ['K','P','V'],
+    'D': ['D','F','I'], 'F': ['D','F','I'], 'I': ['D','F','I'],
+    'B': ['B','N','Q'], 'N': ['B','N','Q'], 'Q': ['B','N','Q'],
+    'A': ['A','R','E'], 'R': ['A','R','E'], 'E': ['A','R','E'],
+    'C': ['C','M','J'], 'M': ['C','M','J'], 'J': ['C','M','J'],
+  };
+
+  return faces.split('').map(f => groups[f]).reduce((a, n) => a.concat(n), []);
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a;
+}
+
+// cornerPairs is { pairs: string[], mustInclude: bool }[]
+function generateMemo(cornerPairs) {
   // build the memo sequence
-  const chosen = [];
-  while (cycles.length > 0) {
-    const cycle = cycles[Math.floor(Math.random() * cycles.length)];
-    chosen.push(cycle);
-    const dupes = groups.
-                    filter(_ => _.some(_ => cycle.includes(_))).
-                    reduce((a, n) => a.concat(n), []);
+  const memo = [];
 
-    cycles = cycles.filter(_ => !dupes.includes(_[0]) && !dupes.includes(_[1]));
+  // try to pick one from each required cycle
+  const requiredCornerPairs = cornerPairs.filter(_ => _.mustInclude);
+  for (const requiredPair of requiredCornerPairs) {
+    // skip if there are no more pairs in this cycle available
+    if (requiredPair.pairs.length == 0) {
+      continue;
+    }
+
+    const pair = chooseRandom(requiredPair.pairs);
+    memo.push(pair);
+
+    // filter out all pairs that move the same cubie
+    const dupes = otherFacesOnCubie(pair);
+    for (const pair of cornerPairs) {
+      pair.pairs = pair.pairs.filter(p => dupes.every(_ => !p.includes(_)));
+    }
   }
 
-  console.log(chosen)
+  // fill out the rest of the memo with whatever is left
+  let allPairs = cornerPairs.
+                     map(_ => _.pairs).
+                     filter(_ => _.length > 0).
+                     reduce((a, n) => a.concat(n), []);
 
+  while (allPairs.length > 0) {
+    const pair = chooseRandom(allPairs);
+    memo.push(pair);
+
+    // filter remaining pairs
+    const dupes = otherFacesOnCubie(pair);
+    allPairs = allPairs.filter(p => dupes.every(_ => !p.includes(_)));
+  }
+
+  shuffle(memo);
+  console.log(memo)
+  return memo;
+}
+
+function generateScrambledCube(cornerMemo) {
   const cube = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'.split('');
-
-  // execute the swaps in reverse
-  for (let i = chosen.length - 1; i >= 0; i--) {
-    const buf = cubies['C'];
-    const a = cubies[chosen[i][1]]; // reverse
-    const b = cubies[chosen[i][0]];
-
-    const tmp = [cube[buf[0]], cube[buf[1]], cube[buf[2]]];
-    cube[buf[0]] = cube[b[0]];
-    cube[buf[1]] = cube[b[1]];
-    cube[buf[2]] = cube[b[2]];
-    cube[b[0]] = cube[a[0]];
-    cube[b[1]] = cube[a[1]];
-    cube[b[2]] = cube[a[2]];
-    cube[a[0]] = tmp[0];
-    cube[a[1]] = tmp[1];
-    cube[a[2]] = tmp[2];
+  // swap in reverse so cornerMemo becomes the memo for the solve
+  for (let i = cornerMemo.length - 1; i >= 0; i--) {
+    swapCorners(cube, cornerMemo[i][1], cornerMemo[i][0]);
   }
-
-  return cube.reduce((a, n) => a + n, '');
+  return cube.join('');
 }
 
 function xp(xs, ys) {
@@ -91,12 +117,6 @@ function sq(xs) {
   return xp(xs, xs);
 }
 
-//function scramble(cycles) {
-//  const solve = Cube.fromString(gen(cycles.reduce((a, n) => a.concat(n), []))).solve();
-//  const scramble = Cube.inverse(solve);
-//  return scramble;
-//}
-
 const div = document.getElementById('main');
 const cycles = document.getElementById('cycles');
 const btn = document.getElementById('gen');
@@ -112,12 +132,16 @@ Cube.asyncInit('./lib/worker.js', function() {
   div.innerText = 'Ready!';
 
   btn.onclick = function() {
-    const cs = {};
+    const cornerPairs = [];
     cycles.childNodes.forEach(cc => {
+      const pairs = {};
       const is = cc.getElementsByTagName('input');
-      xp(is[0].value, is[1].value).forEach(cycle => cs[cycle] = true);
+      xp(is[0].value, is[1].value).forEach(pair => pairs[pair] = true);
+      cornerPairs.push({ pairs: Object.keys(pairs), mustInclude: is[2].checked });
     });
-    const c = Cube.fromString(gen(Object.keys(cs)));
+
+    const memo = generateMemo(cornerPairs);
+    const c = Cube.fromString(generateScrambledCube(memo));
     Cube._asyncSolve(c, function(alg) {
       div.innerText = Cube.inverse(alg);
     });
