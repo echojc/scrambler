@@ -24,19 +24,27 @@ function chooseRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function otherFacesOnCubie(faces) {
-  const groups = {
-    'G': ['G','L','U'], 'L': ['G','L','U'], 'U': ['G','L','U'],
-    'H': ['H','S','X'], 'S': ['H','S','X'], 'X': ['H','S','X'],
-    'T': ['T','O','W'], 'O': ['T','O','W'], 'W': ['T','O','W'],
-    'K': ['K','P','V'], 'P': ['K','P','V'], 'V': ['K','P','V'],
-    'D': ['D','F','I'], 'F': ['D','F','I'], 'I': ['D','F','I'],
-    'B': ['B','N','Q'], 'N': ['B','N','Q'], 'Q': ['B','N','Q'],
-    'A': ['A','R','E'], 'R': ['A','R','E'], 'E': ['A','R','E'],
-    'C': ['C','M','J'], 'M': ['C','M','J'], 'J': ['C','M','J'],
-  };
+const cubieGroups = {
+  'G': ['G','L','U'], 'L': ['G','L','U'], 'U': ['G','L','U'],
+  'H': ['H','S','X'], 'S': ['H','S','X'], 'X': ['H','S','X'],
+  'T': ['T','O','W'], 'O': ['T','O','W'], 'W': ['T','O','W'],
+  'K': ['K','P','V'], 'P': ['K','P','V'], 'V': ['K','P','V'],
+  'D': ['D','F','I'], 'F': ['D','F','I'], 'I': ['D','F','I'],
+  'B': ['B','N','Q'], 'N': ['B','N','Q'], 'Q': ['B','N','Q'],
+  'A': ['A','R','E'], 'R': ['A','R','E'], 'E': ['A','R','E'],
+  'C': ['C','M','J'], 'M': ['C','M','J'], 'J': ['C','M','J'],
+};
 
-  return faces.split('').map(f => groups[f]).reduce((a, n) => a.concat(n), []);
+const cornerTwistPairs = Object.entries(cubieGroups).
+                           map(kv => kv[1].map(_ => kv[0] + _)).
+                           reduce((a, n) => a.concat(n), []);
+
+function otherFacesOnCubie(faces) {
+  return faces.split('').map(f => cubieGroups[f]).reduce((a, n) => a.concat(n), []);
+}
+
+function isCornerTwistPair(pair) {
+  return cornerTwistPairs.includes(pair);
 }
 
 function shuffle(a) {
@@ -135,7 +143,9 @@ Cube.asyncInit('./lib/worker.js', function() {
     cycles.childNodes.forEach(cc => {
       const pairs = {};
       const is = cc.getElementsByTagName('input');
-      xp(is[0].value, is[1].value).forEach(pair => pairs[pair] = true);
+      xp(is[0].value, is[1].value).
+        filter(_ => !isCornerTwistPair(_)).
+        forEach(pair => pairs[pair] = true);
       cornerPairs.push({ pairs: Object.keys(pairs), mustInclude: is[2].checked });
     });
 
