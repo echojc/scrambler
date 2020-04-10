@@ -126,7 +126,6 @@ div.innerText = 'Initialising generator...';
 btn.disabled = true;
 
 console.log('solver: init...');
-//Cube.initSolver();
 Cube.asyncInit('./lib/worker.js', function() {
   console.log('solver: inited!');
   div.innerText = 'Ready!';
